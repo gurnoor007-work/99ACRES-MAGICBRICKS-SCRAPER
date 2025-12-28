@@ -1,6 +1,7 @@
 #This module will scrape the results from 99acres.com
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
+from playwright.async_api import Page
 import asyncio
 #misc imports
 from colorama import Fore, Style, Back, init
@@ -12,6 +13,27 @@ from helper_function import property_handler, auto_scroll
 
 
 URL = "https://www.99acres.com/"
+
+#Create a function to scrap the data from the result page
+async def result_scraper(page: Page):
+    NAME = []
+    PRICE = []
+    CONFIG = []
+    SELLER_TYPE = []
+    SELLER_NAME = []
+    LINK = []
+    #1. Create the House cards list
+    await asyncio.sleep(1.5)
+    property_cards = await page.locator('div.PseudoTupleRevamp__tupleWrapProject.undefined').all()
+    #2. Loop through the property cards
+    for prop in property_cards:
+        config_type_count = 0
+        config_elem = prop.locator('div.configs__configCard')
+        config_type_count = await config_elem.count()
+        working_count = (config_type_count+1)/2 
+
+        for i in range(working_count):
+            pass
 
 #create the main function
 async def main(query = "Kolkata"):
@@ -49,55 +71,19 @@ async def main(query = "Kolkata"):
                 2. Price
                 3. BHKs it offers (accordingly price will be shown)
                 4. Seller type
+                5. Seller Name
 
                 In order to handle the messy data, we will use config based data sorting
                 I will judge based on BHK only because a single property card has only subunits based on BHK
             """
 
             #Start scraping
-            NAMES_LIST = []
-            SELLER_TYPE_LIST = []
-            SELLER_NAME_LIST = []
-            CONFIGS = []
             #0. Scroll to the bottom first
             await auto_scroll(page=page)
-            #1. Scrap the names
-            try:
-                NAMES_LIST = await page.locator('div.PseudoTupleRevamp__headNrating a.ellipsis').evaluate_all("els => els.map(e => e.title)")
-                print(Style.BRIGHT + Fore.YELLOW + f"Got {len(NAMES_LIST)} names!!!")
-            except Exception as e:
-                print(Back.RED + f"Can't extract names, error: {e}")
+            await result_scraper(page=page)
+            
 
-            #2. Scrap the Seller type
-            try:
-                seller_type_list_raw = await page.locator('div.PseudoTupleRevamp__contactHeading').all()
-                for i in seller_type_list_raw:
-                    text = await i.inner_text()
-                    SELLER_TYPE_LIST.append(text)
-
-                print(Fore.YELLOW + Style.BRIGHT + f"Found {len(SELLER_TYPE_LIST)} seller types!!!")
-            except Exception as e:
-                print(Back.RED + f"Can't extract seller_types, error: {e}")
-
-            #3. Scrap the Seller names type
-            try:
-                seller_name_list_raw = await page.locator('div.PseudoTupleRevamp__contactSubheading').all()
-                for i in seller_name_list_raw:
-                    text = await i.inner_text()
-                    SELLER_NAME_LIST.append(text)
-
-                print(Fore.YELLOW + Style.BRIGHT + f"Found {len(SELLER_NAME_LIST)} seller names!!!")
-                for name, seller_type, seller_name in zip(NAMES_LIST, SELLER_TYPE_LIST, SELLER_NAME_LIST):
-                    print(Fore.LIGHTGREEN_EX + Style.BRIGHT + name + " - " + seller_type + " - " + seller_name)
-                    await asyncio.sleep(0.5)
-            except Exception as e:
-                print(Back.RED + f"Can't extract seller_names, error: {e}")
-
-            #4. The most important, house config
-            try:
-                pass
-            except:
-                print(Back.RED + f"Can't extract configs, error: {e}")
+            
                 
 
 
