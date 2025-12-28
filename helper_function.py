@@ -24,7 +24,7 @@ async def human_type(keyword: str, elem: Locator):
     await elem.type(text=keyword, delay=random.uniform(100, 125))
 
 #make a function to handle target=_blank clicks
-from colorama import Fore, init
+from colorama import Fore, init, Style
 init(autoreset=True)
 async def property_handler(page: Page,
                             elem_list: list):
@@ -44,7 +44,7 @@ async def property_handler(page: Page,
 
 #Make a function to scroll to the bottom
 async def auto_scroll(page: Page):
-    print(Fore.RED + "->" + Fore.BLUE + "Scrolling to the bottom of page...")
+    print(Fore.RED + Style.BRIGHT + "->" + Fore.GREEN + "Scrolling to the bottom of page...")
     #Get the height of the page PRESENTLY
     page_height = await page.evaluate("document.body.scrollHeight")
 
