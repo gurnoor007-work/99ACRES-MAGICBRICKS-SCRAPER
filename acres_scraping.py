@@ -43,7 +43,7 @@ async def main(query = "Kolkata"):
 
             #now just scrape everything
             await page.wait_for_selector('div.r_srp__rightSection')
-            elem_list = await page.locator('div.tupleNew__headingCont').all()
+            elem_list = await page.locator('div.PseudoTupleRevamp__tupleWrapProject').all()
             await auto_scroll(page=page)
             await property_handler(page=page, elem_list=elem_list)
 

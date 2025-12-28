@@ -57,7 +57,7 @@ async def auto_scroll(page: Page):
 
         new_height = await page.evaluate("document.body.scrollHeight")
         if new_height == page_height: #this means that new stuff didn't load
-            await asyncio.sleep(2)
+            await asyncio.sleep(8)
             if new_height == await page.evaluate("document.body.scrollHeight"):
                 break
         page_height = new_height
