@@ -13,7 +13,6 @@ from helper_function import property_handler, auto_scroll
 
 URL = "https://www.99acres.com/"
 
-
 #create the main function
 async def main(query = "Kolkata"):
     #use stealth playwright
@@ -41,11 +40,7 @@ async def main(query = "Kolkata"):
             await human_type(keyword=query, elem=search_box)
             await page.keyboard.press('Enter')
 
-            #now just scrape everything
-            await page.wait_for_selector('div.r_srp__rightSection')
-            elem_list = await page.locator('div.PseudoTupleRevamp__tupleWrapProject').all()
-            await auto_scroll(page=page)
-            await property_handler(page=page, elem_list=elem_list)
+            
 
 
 
