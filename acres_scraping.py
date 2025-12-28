@@ -8,6 +8,7 @@ init(autoreset=True)
 import os
 from helper_function import human_click
 from helper_function import human_type
+from helper_function import property_handler, auto_scroll
 
 
 URL = "https://www.99acres.com/"
@@ -39,6 +40,13 @@ async def main(query = "Kolkata"):
             await asyncio.sleep(2)
             await human_type(keyword=query, elem=search_box)
             await page.keyboard.press('Enter')
+
+            #now just scrape everything
+            await page.wait_for_selector('div.r_srp__rightSection')
+            elem_list = await page.locator('div.tupleNew__headingCont').all()
+            await auto_scroll(page=page)
+            await property_handler(page=page, elem_list=elem_list)
+
 
 
             await asyncio.sleep(5)
