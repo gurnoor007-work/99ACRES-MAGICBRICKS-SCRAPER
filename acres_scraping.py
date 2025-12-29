@@ -23,7 +23,6 @@ async def result_scraper(page: Page):
     SELLER_NAME = []
     NUMBER = []
     #1. Create the House cards list
-    await asyncio.sleep(1.5)
     property_cards = await page.locator('section[data-hydration-on-demand="true"]').all()
     #2. Loop through the property cards
     for prop in property_cards:
@@ -98,7 +97,7 @@ async def main(query = "Kolkata"):
         try:
             #create a browser
             browser = await p.chromium.launch(headless=False)
-            #create a context
+            #create a context, make sure to use cookies to act like a real user
             context = await browser.new_context(
                 user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
                 storage_state="cookies/cookie_99acres.json"
@@ -109,7 +108,9 @@ async def main(query = "Kolkata"):
             print(Fore.RED + Style.BRIGHT + "->" + Fore.GREEN + f"Retrieving {URL}...")
             await page.goto(url=URL)
             await page.wait_for_selector('input.component__searchInput#keyword2[name="keyword"]')
+            await asyncio.sleep(0.5)
             print(Fore.RED + Style.BRIGHT + "->" + Fore.GREEN + f"Search selector found, entering query...")
+            #Search box located, now comes the searching part
 
             #enter the query
             search_box = page.locator('input.component__searchInput#keyword2[name="keyword"]')
@@ -120,27 +121,30 @@ async def main(query = "Kolkata"):
             await page.wait_for_selector('div[data-label="SEARCH"]')
             print(Fore.RED + Style.BRIGHT + "->" + Fore.GREEN + "Reached the results page, started scraping...")
             #reached the results page
+        except Exception as e:
+            print(Back.RED + f"Can't reach URLS: {e}")
 
-            """
-                The only thing we can scrap on the results page is:
-                1. Name
-                2. Price
-                3. BHKs it offers (accordingly price will be shown)
-                4. Seller type
-                5. Seller Name
+        """
+            The only thing we can scrap on the results page is:
+            1. Name
+            2. Price
+            3. BHKs it offers (accordingly price will be shown)
+            4. Seller type
+            5. Seller Name
+            6. Number
 
-                In order to handle the messy data, we will use config based data sorting
-                I will judge based on BHK only because a single property card has only subunits based on BHK
-            """
+            In order to handle the messy data, we will use config based data sorting
+            I will judge based on BHK only because a single property card has only subunits based on BHK
+        """
 
+        try:
             #Start scraping
             #0. Scroll to the bottom first
             await auto_scroll(page=page)
+            #1. Run our result scraper
             await result_scraper(page=page)
-            await asyncio.sleep(5)
-
         except Exception as e:
-            print(Back.RED + str(e))
+            print(Back.RED + f"Error in Scraping: {e}")
 
         #finally store the cookies
         finally:
