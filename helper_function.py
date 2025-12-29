@@ -13,6 +13,7 @@ from playwright.async_api import async_playwright
 from playwright.async_api import Locator, Page
 async def human_click(page: Page, elem: Locator):
     #hover over the element first
+    await elem.evaluate("el => el.scrollIntoView()")
     await elem.hover()
     await asyncio.sleep(1.32455)
 

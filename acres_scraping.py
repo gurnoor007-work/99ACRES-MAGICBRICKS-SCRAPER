@@ -21,19 +21,75 @@ async def result_scraper(page: Page):
     CONFIG = []
     SELLER_TYPE = []
     SELLER_NAME = []
-    LINK = []
+    NUMBER = []
     #1. Create the House cards list
     await asyncio.sleep(1.5)
-    property_cards = await page.locator('div.PseudoTupleRevamp__tupleWrapProject.undefined').all()
+    property_cards = await page.locator('section[data-hydration-on-demand="true"]').all()
     #2. Loop through the property cards
     for prop in property_cards:
         config_type_count = 0
-        config_elem = prop.locator('div.configs__configCard')
-        config_type_count = await config_elem.count()
-        working_count = (config_type_count+1)/2 
+        config_elem = await prop.locator('div.configs__configCardsWrap div.configs__configCard').all()
+        divider_elem = await prop.locator('div.configs__configCards div.configs__divider').all()
+        config_type_count = len(config_elem)
+        
 
-        for i in range(working_count):
-            pass
+        for i in range(config_type_count): #i = 0, 1, 2
+            #1. Get the name
+            try:
+                name = await prop.locator('a.ellipsis').inner_text()
+                NAME.append(str(name))
+            except Exception as e:
+                print(Back.RED + f"Can't extract name: {str(e)}")
+
+            #2. Get the config
+            try:
+                config = prop.locator('div.cc__CarouselBox div.configs__configCard').nth(i)
+                config_text = await config.locator('div.configs__ccl1').inner_text()
+                CONFIG.append(config_text[0:6])
+            except Exception as e:
+                print(Back.RED + f"Can't extract config: {str(e)}")
+
+            #3. Get the Price
+            try:
+                config = prop.locator('div.cc__CarouselBox div.configs__configCard').nth(i)
+                price = await config.locator('div.configs__ccl2').inner_text()
+                PRICE.append(price)
+            except Exception as e:
+                print(Back.RED + f"Can't extract price: {str(e)}")
+
+            #4. Get the seller type
+            try:
+                seller_block = prop.locator('div.PseudoTupleRevamp__builderInfo')
+                seller_type = await seller_block.locator('div.PseudoTupleRevamp__contactHeading').inner_text()
+                SELLER_TYPE.append(seller_type)
+            except Exception as e:
+                print(Back.RED + f"Can't extract seller_type: {str(e)}")
+            
+            #5. Get the seller name
+            try:
+                seller_block = prop.locator('div.PseudoTupleRevamp__builderInfo')
+                seller_name = await seller_block.locator('div.PseudoTupleRevamp__contactSubheading').inner_text()
+                SELLER_NAME.append(seller_name)
+            except Exception as e:
+                print(Back.RED + f"Can't extract seller_type: {str(e)}")
+            
+            #6. Get the number
+            try:
+                #first click the "view_number" button
+                button_elem = page.locator('div.PseudoTupleRevamp__viewNumber.pageComponent.trackGAClick[data-label="VIEW_NUMBER"]').first
+                await human_click(page=page, elem=button_elem)
+                await page.wait_for_selector('div.component__cnfCardCont')
+                await asyncio.sleep(1)
+                number = await page.locator('div.component__cnfCardCont div.component__advertiserPhone').inner_text()
+                NUMBER.append(number)
+                cross_button = page.locator('i.pageComponent.component__eoiLayerCrossBtn[data-label="CLOSE"]')
+                await human_click(page=page, elem=cross_button)
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                print(Back.RED + f"Can't extract number: {str(e)}")
+
+            print(Fore.YELLOW + Style.BRIGHT + name + " - " + config_text[0:6] + " - " + price + " - " + seller_type + " - " + seller_name + " - " + number)
+    print(len(NAME))
 
 #create the main function
 async def main(query = "Kolkata"):
@@ -81,12 +137,6 @@ async def main(query = "Kolkata"):
             #0. Scroll to the bottom first
             await auto_scroll(page=page)
             await result_scraper(page=page)
-            
-
-            
-                
-
-
             await asyncio.sleep(5)
 
         except Exception as e:
@@ -96,8 +146,6 @@ async def main(query = "Kolkata"):
         finally:
             os.makedirs('cookies', exist_ok=True)
             await context.storage_state(path='cookies/cookie_99acres.json')
-
-        
 
 if __name__ == '__main__':
     asyncio.run(main())
