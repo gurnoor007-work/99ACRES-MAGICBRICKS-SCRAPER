@@ -62,27 +62,30 @@ async def property_handler(page: Page,
 #Make a function to scroll to the bottom
 async def auto_scroll(page: Page):
     print(Fore.RED + Style.BRIGHT + "->" + Fore.GREEN + "Scrolling to the bottom of page...")
-    #Get the height of the page PRESENTLY
     previous_height = await page.evaluate("document.body.scrollHeight")
+    no_change_count = 0
     
     while True:
         current_scroll = await page.evaluate("window.scrollY")
-        target_scroll = current_scroll + 800
+        target_scroll = current_scroll + 3000 
         
         while current_scroll < target_scroll:
-            delta = random.randint(50, 150)
+            delta = random.randint(400, 600)
             await page.mouse.wheel(0, delta)
-            await asyncio.sleep(random.uniform(1, 2))
+            await asyncio.sleep(0.01) 
             current_scroll += delta
             
             max_h = await page.evaluate("document.body.scrollHeight")
             if current_scroll > max_h:
                 break
 
-        # Wait for potential network load
-        await asyncio.sleep(random.uniform(1.5, 3.0))
+        await asyncio.sleep(1.0)
         
         new_height = await page.evaluate("document.body.scrollHeight")
         if new_height == previous_height:
-            break
-        previous_height = new_height
+            no_change_count += 1
+            if no_change_count >= 2:
+                break
+        else:
+            no_change_count = 0
+            previous_height = new_height
