@@ -2,6 +2,7 @@
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 from playwright.async_api import Page
+from playwright.async_api import expect
 import asyncio
 #misc imports
 from colorama import Fore, Style, Back, init
@@ -10,6 +11,7 @@ import os
 from helper_function import human_click
 from helper_function import human_type
 from helper_function import property_handler, auto_scroll
+import random
 
 
 URL = "https://www.99acres.com/"
@@ -24,11 +26,12 @@ async def result_scraper(page: Page):
     NUMBER = []
     #1. Create the House cards list
     property_cards = await page.locator('section[data-hydration-on-demand="true"]').all()
+    #ignore the first two property boxes because they are different from the rest
+    property_cards = property_cards[2:]
     #2. Loop through the property cards
     for prop in property_cards:
-        config_type_count = 0
+        #This helps us identify how many configs are there
         config_elem = await prop.locator('div.configs__configCardsWrap div.configs__configCard').all()
-        divider_elem = await prop.locator('div.configs__configCards div.configs__divider').all()
         config_type_count = len(config_elem)
         
 
@@ -44,7 +47,7 @@ async def result_scraper(page: Page):
             try:
                 config = prop.locator('div.cc__CarouselBox div.configs__configCard').nth(i)
                 config_text = await config.locator('div.configs__ccl1').inner_text()
-                CONFIG.append(config_text[0:6])
+                CONFIG.append(config_text[0:6]) #to get the "N BHK" part
             except Exception as e:
                 print(Back.RED + f"Can't extract config: {str(e)}")
 
@@ -74,20 +77,25 @@ async def result_scraper(page: Page):
             
             #6. Get the number
             try:
-                #first click the "view_number" button
-                button_elem = page.locator('div.PseudoTupleRevamp__viewNumber.pageComponent.trackGAClick[data-label="VIEW_NUMBER"]').first
-                await human_click(page=page, elem=button_elem)
-                await page.wait_for_selector('div.component__cnfCardCont')
-                await asyncio.sleep(1)
+                #Find the number element
+                number_button = prop.locator('div[data-label="VIEW_NUMBER"]')
+                #click the button
+                await human_click(page=page, elem=number_button)
+                await page.wait_for_selector('div.component__cnfCardCont div.component__advertiserPhone')
+                await asyncio.sleep(random.uniform(0.1, 0.3))
+                #Get the number
                 number = await page.locator('div.component__cnfCardCont div.component__advertiserPhone').inner_text()
                 NUMBER.append(number)
-                cross_button = page.locator('i.pageComponent.component__eoiLayerCrossBtn[data-label="CLOSE"]')
-                await human_click(page=page, elem=cross_button)
-                await asyncio.sleep(0.5)
+
+                #Close the number box
+                close_button = page.locator('i.pageComponent.component__eoiLayerCrossBtn[data-label="CLOSE"]')
+                await human_click(page=page, elem=close_button)
+                #wait for some button in the previous page to be clickable, i.e, wait for the previous page to appear
+                await expect(number_button).to_be_enabled(timeout=0)
             except Exception as e:
                 print(Back.RED + f"Can't extract number: {str(e)}")
 
-            print(Fore.YELLOW + Style.BRIGHT + name + " - " + config_text[0:6] + " - " + price + " - " + seller_type + " - " + seller_name + " - " + number)
+            print(Fore.BLUE + name + Fore.RED + Style.BRIGHT + " | " + Style.RESET_ALL + Fore.BLUE+ config_text[0:6] + Fore.RED + Style.BRIGHT + " | " + Style.RESET_ALL + Fore.BLUE+ price + Fore.RED + Style.BRIGHT + " | " + Style.RESET_ALL + Fore.BLUE+ seller_type + Fore.RED + Style.BRIGHT + " | " + Style.RESET_ALL + Fore.BLUE+ seller_name + Fore.RED + Style.BRIGHT + " | " + Style.RESET_ALL + Fore.BLUE+ number)
     print(len(NAME))
 
 #create the main function
